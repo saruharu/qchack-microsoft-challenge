@@ -1,7 +1,14 @@
 namespace QCHack.Task4 {
     open Microsoft.Quantum.Canon;
     open Microsoft.Quantum.Intrinsic;
+    open Microsoft.Quantum.Arrays;
 
+    open Microsoft.Quantum.Arithmetic;
+    open Microsoft.Quantum.Convert;
+    open Microsoft.Quantum.Diagnostics;
+    open Microsoft.Quantum.Logical;
+    open Microsoft.Quantum.Math;
+    open Microsoft.Quantum.Measurement;
     // Task 4 (12 points). f(x) = 1 if the graph edge coloring is triangle-free
     // 
     // Inputs:
@@ -37,13 +44,50 @@ namespace QCHack.Task4 {
     // Hint: Remember that you can examine the inputs and the intermediary results of your computations
     //       using Message function for classical values and DumpMachine for quantum states.
     //
-    operation Task4_TriangleFreeColoringOracle (
-        V : Int, 
-        edges : (Int, Int)[], 
-        colorsRegister : Qubit[], 
-        target : Qubit
-    ) : Unit is Adj+Ctl {
-        // ...
-    }
-}
 
+
+    //to check if the colors are equal
+    operation ColorEqualityOracle_1bit (c0 : Qubit, c1 : Qubit, target : Qubit) : Unit is Adj+Ctl {
+        
+        CNOT( c1, c0);
+        X(c0);
+        X(c1);
+
+        CCNOT(c0,c1, target);
+
+        X(target);
+         X(c0);
+        X(c1);
+           
+        CNOT( c1, c0);
+    }
+
+    operation Task4_TriangleFreeColoringOracle ( V : Int, edges : (Int, Int)[], colorsRegister : Qubit[], target : Qubit) : Unit is Adj+Ctl {
+    let edgesNumber = Length(edges);
+    // Allocate the array of qubits storing the conflicts of the coloring 
+    use conflicts = Qubit[edgesNumber/2];
+    within {
+        // Iterate over every edge
+        for i in 0 .. edgesNumber-1{
+            // Deconstruct the edge tuple into two separate vertex indices
+            let (v0, v1) = edges[i];
+            for j in i .. edgesNumber-1 {
+                let (v2,v3) = edges[j];
+                for k in j .. edgesNumber -1{
+                    let (v4,v5) = edges[k];
+                    if ( v1 == v2 and v3 == v4 and v5 == v0){
+                            ColorEqualityOracle_1bit(colorsRegister[i], 
+                                     colorsRegister[j], conflicts[i]);
+                            ColorEqualityOracle_1bit(colorsRegister[i],
+                                    colorsRegister[k], conflicts[i]);         
+                    }
+                }
+            }
+        }
+    } apply {
+        // If all the edges are colored properly, conflicts should be in state |0...0⟩
+        (ControlledOnInt(0, X))(conflicts, target);
+    }
+    }
+        
+}
