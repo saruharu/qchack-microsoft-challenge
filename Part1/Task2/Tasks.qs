@@ -19,7 +19,21 @@ namespace QCHack.Task2 {
     // will be 1/√3|001⟩ ⊗ |1⟩ + 1/√3|110⟩ ⊗ |1⟩ + 1/√3|111⟩ ⊗ |0⟩.
     //
     operation Task2_ValidTriangle (inputs : Qubit[], output : Qubit) : Unit is Adj+Ctl {
-        // ...
+        let PatternOne = ControlledOnBitString([false, false, true], X);
+        let PatternTwo = ControlledOnBitString([false, true, false], X);
+        let PatternThree = ControlledOnBitString([false, true, true], X);
+        let PatternFour = ControlledOnBitString([true, false, false], X);
+        let PatternFive = ControlledOnBitString([true, false, true], X);
+        let PatternSix = ControlledOnBitString([true, true, false], X);
+         
+        PatternOne(inputs, output);
+        PatternTwo(inputs, output);
+                
+        PatternThree(inputs, output);
+        PatternFour(inputs, output);
+                
+        PatternFive(inputs, output);
+        PatternSix(inputs, output);
     }
 }
 
